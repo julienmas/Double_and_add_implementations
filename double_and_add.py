@@ -130,11 +130,14 @@ def add_proj(P,Q,c):
     b = (x2*z1)%p - (x1*z2)%p
     b3 = (((b*b)%p)*b)%p
     d = (((((b*b)%p)*x1)%p)*z2)%p
-    c = ((a*a)%p) * ((z1*z2)%p) - b3 - (2*d)%p
+    c = ((((a*a)%p) * ((z1*z2)%p))%p - b3 - (2*d)%p)%p
     
     x3 = (b*c)%p
-    y3 = (a*(d-c))%p - (((b3*y1)%p)*z2)%p
+    y3 = ((a*(d-c))%p - (((b3*y1)%p)*z2)%p)%p
     z3 = (((b3*z1)%p)*z2)%p
+
+    R = point_3d(x3, y3, z3)
+    return R
 
 
 def double_proj(P,c):
@@ -147,12 +150,12 @@ def double_proj(P,c):
     a = ((A*(z1*z1)%p)%p + (3*((x1*x1)%p))%p)%p
     b = (y1*z1)%p
     c = (((x1*y1)%p)*b)%p
-    d = (a*a)%p - (8*c)%p
+    d = ((a*a)%p - (8*c)%p)%p
     b3 = (((b*b)%p)*b)%p
 
     x3 = (2*b*d)%p
-    y3 = (a*(4*c-d))%p - (((8*y1*y1)%p)*((b*b)%p))%p
-    z3 = (8*((b*b)%p)*b)%p
+    y3 = ((a*(4*c-d))%p - (((8*y1*y1)%p)*((b*b)%p))%p)%p
+    z3 = (8*b3)%p
 
     R = point_3d(x3, y3, z3)
     return R
@@ -175,28 +178,31 @@ Q3 = point_3d(x, y, z)
 
 brainpoolP224r1 = elliptic_curve(p, A, B)
 
-print("Q*2 affine")
-dQ = double_aff(Q, brainpoolP224r1)
-dQ.print_coord()
+# print("Q*2 affine")
+# dQ = double_aff(Q, brainpoolP224r1)
+# dQ.print_coord()
 
-print("Q*3 affine")
-tQ = add_aff(dQ, Q, brainpoolP224r1)
-tQ.print_coord()
+# print("Q*3 affine")
+# tQ = add_aff(dQ, Q, brainpoolP224r1)
+# tQ.print_coord()
 
 print("Q*2 proj")
 dQ3 = double_proj(Q3, brainpoolP224r1)
 dQ3.print_coord()
-dz3 = dQ3.z
+#inv_dz3 =  ext_eucl_alg(dQ3.z, p)
+inv_dz3 = pow(dQ3.z, p-2, p)
+
+#print((dQ3.z * inv_dz3)%p)
 
 print("en affine : ")
-print("x: ", dQ3.x*dz3)
-print("y: ", dQ3.y*dz3)
+print("x: ", (dQ3.x*inv_dz3)%p)
+print("y: ", (dQ3.y*inv_dz3)%p)
 
-print("Q*3 proj")
-tQ3 = add_proj(dQ3, Q3, brainpoolP224r1)
-tQ3.print_coord()
-tz3 = tQ3.z
+# print("Q*3 proj")
+# tQ3 = add_proj(dQ3, Q3, brainpoolP224r1)
+# tQ3.print_coord()
+# tz3 = tQ3.z
 
-print("en affine : ")
-print("x: ", tQ3.x*tz3)
-print("y: ", tQ3.y*tz3)
+# print("en affine : ")
+# print("x: ", (tQ3.x*tz3)%p)
+# print("y: ", (tQ3.y*tz3)%p)
