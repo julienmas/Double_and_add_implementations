@@ -44,8 +44,8 @@ class point_2d:
     def print_coord(self):
         if self.name != None:
             print(self.name)
-        print("x: ", self.x)
-        print("y: ", self.y)
+        print("x: ", hex(self.x))
+        print("y: ", hex(self.y))
 
 class point_3d:
     def __init__(self, x, y, z, name=None):
@@ -178,13 +178,13 @@ Q3 = point_3d(x, y, z)
 
 brainpoolP224r1 = elliptic_curve(p, A, B)
 
-# print("Q*2 affine")
-# dQ = double_aff(Q, brainpoolP224r1)
-# dQ.print_coord()
+print("Q*2 affine")
+dQ = double_aff(Q, brainpoolP224r1)
+dQ.print_coord()
 
-# print("Q*3 affine")
-# tQ = add_aff(dQ, Q, brainpoolP224r1)
-# tQ.print_coord()
+print("Q*3 affine")
+tQ = add_aff(dQ, Q, brainpoolP224r1)
+tQ.print_coord()
 
 print("Q*2 proj")
 dQ3 = double_proj(Q3, brainpoolP224r1)
