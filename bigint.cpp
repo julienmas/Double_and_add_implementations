@@ -12,10 +12,13 @@ class BigInt
 {
     
 public:
+    unsigned char n[BIGINT_LENGTH]; // unsigned char : 2 bytes (0 to 255 possible)
+
     BigInt();
-    //BigInt(unsigned char m[BIGINT_LENGTH]){ memcpy(n,m, sizeof(m));}
+    BigInt(unsigned char m[BIGINT_LENGTH]){ memcpy(n,m, sizeof(n));}
     BigInt(string &);
 
+    //unsigned char * getn() const {   return n;}
     void printBigInt(int) const;
 
     friend BigInt &operator+=(BigInt &, const BigInt &); // & to do not copy the object
@@ -26,8 +29,7 @@ public:
     friend BigInt &operator*=(BigInt &, const BigInt &);
     friend BigInt operator*(const BigInt &, const BigInt &);
 
-private:
-    unsigned char n[BIGINT_LENGTH]; // unsigned char : 2 bytes (0 to 255 possible)
+//private:
 };
 
 
@@ -40,9 +42,14 @@ BigInt::BigInt()
 
 BigInt::BigInt(string & s)
 {
+    int l = s.length();
     for (int i=0; i<BIGINT_LENGTH; i++)
     {
-        switch (s[i])
+        n[i]=0;
+    }
+    for (int i=BIGINT_LENGTH-l; i<BIGINT_LENGTH; i++)
+    {
+        switch (s[i-BIGINT_LENGTH+l])
         {
         case '0':
             n[i] = 0;
@@ -75,27 +82,33 @@ BigInt::BigInt(string & s)
             n[i] = 9;
             break;
         case 'a':
+        case 'A':
             n[i] = 10;
             break;
         case 'b':
+        case 'B':
             n[i] = 11;
             break;
         case 'c':
+        case 'C':
             n[i] = 12;
             break;
         case 'd':
+        case 'D':
             n[i] = 13;
             break;
         case 'e':
+        case 'E':
             n[i] = 14;
             break;
         case 'f':
+        case 'F':
             n[i] = 15;
             break;
         default:
+            cout << "Error in BigInt init\n";
             break;
         }
-    
     }
 }
 
@@ -166,9 +179,10 @@ BigInt &operator+=(BigInt &a,const BigInt& b)
     {
         a.n[i] += b.n[i]+carry;
         carry = 0;
-        if (a.n[i] > DIGIT_MAX)
+        if (a.n[i] >= DIGIT_MAX)
         {
-            a.n[i] -= DIGIT_MAX;
+            a.n[i] &= DIGIT_MAX - 1; // masque bit à bit plus opti que la soustraction
+            //a.n[i] -= DIGIT_MAX;
             carry = 1;
         }
     }
@@ -178,14 +192,28 @@ BigInt &operator+=(BigInt &a,const BigInt& b)
 
 BigInt operator+(const BigInt &a, const BigInt &b)
 {
-    BigInt temp;
-    temp = a;
+    BigInt temp = a;
     temp += b;
     return temp;
 }
 
-BigInt &operator-=(BigInt &a, const BigInt &b)
+BigInt &operator-=(BigInt &a, BigInt const &b)
 {
+    /*unsigned char m[BIGINT_LENGTH];
+    
+    //memcpy(m, b.getn(), sizeof(m));
+    memcpy(m, b.n, sizeof(b.n));
+    for (int i=0; i< BIGINT_LENGTH; i++)
+    {
+        m[i] = ~m[i];
+    }
+    BigInt bCompl(m);
+    string o = "1";
+    BigInt one(o);
+    BigInt r;
+    r = a + bCompl + one;
+    return r;*/
+
     unsigned char carry = 0;
     for (int i = BIGINT_LENGTH-1; i>= 0; i--)
     {
@@ -196,11 +224,12 @@ BigInt &operator-=(BigInt &a, const BigInt &b)
         }
         else
         {
-            a.n[i] = DIGIT_MAX - (b.n[i]+carry - a.n[i]);
-            carry = -1;
+            a.n[i] += DIGIT_MAX;
+            a.n[i] -= b.n[i]+carry;
+            carry = 1;
         }
     }
-    return a;
+    return a; 
 }
 
 BigInt operator-(const BigInt &a, const BigInt &b)
@@ -241,14 +270,26 @@ int main()
 {
     string x = "0D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D";
     string y = "58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD";
-
+    string z = "58";
+    string u = "d";
+    string t = "fffffffffffffffffffffffffffffffffffffffffffffffffffffeff";
 
     BigInt a(x);
+    //a.printBigInt();
+    cout << "\n";
+
     BigInt b(y);
 
-    BigInt c = a + a; // DOES NOT WORK
-
+    BigInt c;
+    BigInt d(z);
+    BigInt e(u);
+    c = b-a;
     c.printBigInt();
 
+    //faire le add avec les overflow : convertir les types ne coute rien
+    // soustraction utilisant -b = b barre +1 :~b= b barre
+
+
+    cout << "\n";
     return 0;
 }
