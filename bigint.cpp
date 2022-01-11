@@ -28,6 +28,8 @@ public:
     friend BigInt operator-(const BigInt &, const BigInt &);
     friend BigInt &operator*=(BigInt &, const BigInt &);
     friend BigInt operator*(const BigInt &, const BigInt &);
+    friend bool operator<(const BigInt &, const BigInt &);
+    friend BigInt mod_add(const BigInt &, const BigInt &, const BigInt &);
 
 //private:
 };
@@ -170,6 +172,7 @@ void BigInt::printBigInt(int base=16) const
             break;
         }
     }
+    cout << "\n";
 }
 
 BigInt &operator+=(BigInt &a,const BigInt& b)
@@ -266,13 +269,43 @@ BigInt operator*(const BigInt &a, const BigInt &b)
     return temp;
 }
 
+
+bool operator<(const BigInt &a, const BigInt &b)
+{
+    for (int i = 0; i<BIGINT_LENGTH; i++)
+    {
+        if (a.n[i] > b.n[i])
+            return false;
+        else if (a.n[i] < b.n[i])
+            return true; 
+    }
+
+    return false; // a == b
+}
+
+
+BigInt mod_add(const BigInt &a, const BigInt &b, const BigInt &p)
+{
+    BigInt temp;
+    temp = a+b;
+    while (not(temp < p))
+    {
+        temp -= p;
+        //temp.printBigInt();
+        //cout << "\n";
+    }
+    return temp;
+}
+
+
 int main()
 {
     string x = "0D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D";
     string y = "58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD";
-    string z = "58";
+    string z = "4444458";
     string u = "d";
-    string t = "fffffffffffffffffffffffffffffffffffffffffffffffffffffeff";
+    string t = "0ffffffffffffffffffffffffffffffffffffffffffffffffffffeff";
+    string v = "DEE12C07D";
 
     BigInt a(x);
     //a.printBigInt();
@@ -281,14 +314,19 @@ int main()
     BigInt b(y);
 
     BigInt c;
-    BigInt d(z);
-    BigInt e(u);
-    c = b-a;
+    BigInt d(v);
+    BigInt e(z);
+    //c = b-a;
+    c = a+b;
     c.printBigInt();
+    c = mod_add(d,d,e);
+    c.printBigInt();
+
+
 
     //faire le add avec les overflow : convertir les types ne coute rien
     // soustraction utilisant -b = b barre +1 :~b= b barre
-
+    // coder operateur modulo
 
     cout << "\n";
     return 0;
