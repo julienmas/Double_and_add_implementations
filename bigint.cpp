@@ -298,6 +298,27 @@ BigInt mod_add(const BigInt &a, const BigInt &b, const BigInt &p)
 }
 
 
+// modular substraction
+BigInt mod_sub(const BigInt &a, const BigInt &b, const BigInt &p)
+{
+    BigInt temp;
+
+    temp = a-b;
+    while (not(temp < p))
+    {
+        temp -= p;
+        //temp.printBigInt();
+        //cout << "\n";
+    }
+    while (temp < 0)
+    {
+        temp += p;
+    }
+
+    return temp;
+}
+
+
 int main()
 {
     string x = "0D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D";
@@ -328,6 +349,11 @@ int main()
     // soustraction utilisant -b = b barre +1 :~b= b barre
     // coder operateur modulo
 
-    cout << "\n";
+    unsigned char h = 255;
+    unsigned char j = 2;
+    unsigned char k = 255+2;
+
+    cout << (int) h << "\t"<< (int) j << "\t"<< (int) k;
+    
     return 0;
 }
