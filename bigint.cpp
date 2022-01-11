@@ -29,7 +29,10 @@ public:
     friend BigInt &operator*=(BigInt &, const BigInt &);
     friend BigInt operator*(const BigInt &, const BigInt &);
     friend bool operator<(const BigInt &, const BigInt &);
-    friend BigInt mod_add(const BigInt &, const BigInt &, const BigInt &);
+    friend BigInt operator%(const BigInt &a, const BigInt &b);
+    friend BigInt mod_add(const BigInt &, const BigInt &, const BigInt &); // modular addtion
+    friend BigInt mod_sub(const BigInt &, const BigInt &, const BigInt &); // modular substraction
+
 
 //private:
 };
@@ -116,7 +119,17 @@ BigInt::BigInt(string & s)
 
 void BigInt::printBigInt(int base=16) const
 {
-    for (int i = 0; i< BIGINT_LENGTH; i++)
+    int j = 0;
+    bool flag = false;
+    while(not(flag))
+    {
+        if (n[j] == 0)
+            flag = true;
+            j --; 
+        j++;
+    }
+
+    for (int i = j; i< BIGINT_LENGTH; i++)
     {
         switch (n[i])
         {
@@ -258,6 +271,34 @@ BigInt &operator*=(BigInt &a, const BigInt &b)
         }
     }
     return a;
+
+
+    /*
+    var partial = { sign: a.sign * b.sign, digits: [] }; // digits should be filled with zeros
+
+    // For each digit of b
+    for (var i = 0; i < b.digits.length; i++) {
+        var carry = 0;
+        var digit;
+
+        // For each digit of a
+        for (var j = i; j < a.digits.length + i; j++) {
+            // Multiply the digits, and add them to the current partial product, along with any carry
+            digit = partial.digits[j] + (b.digits[i] * a.digits[j - i]) + carry;
+            carry = Math.floor(digit / 10); // New carry
+            partial.digits[j] = digit % 10; // Put the result back into the partial product
+        }
+        // Don't forget the final carry (if necessary)!
+        if (carry) {
+            digit = partial.digits[j] + carry;
+            carry = Math.floor(digit / 10);
+            partial.digits[j] = digit % 10;
+        }
+    }
+
+    // That's it!
+    return partial;
+    */
 }
 
 
@@ -284,6 +325,24 @@ bool operator<(const BigInt &a, const BigInt &b)
 }
 
 
+BigInt operator%(const BigInt &a, const BigInt &b)
+{
+    BigInt temp = a;
+    while (not(temp < b))
+    {
+        temp -= b;
+        //temp.printBigInt();
+        //cout << "\n";
+    }
+    while (temp < 0)
+    {
+        temp += b;
+    }
+
+    return temp;
+}
+
+
 BigInt mod_add(const BigInt &a, const BigInt &b, const BigInt &p)
 {
     BigInt temp;
@@ -307,8 +366,6 @@ BigInt mod_sub(const BigInt &a, const BigInt &b, const BigInt &p)
     while (not(temp < p))
     {
         temp -= p;
-        //temp.printBigInt();
-        //cout << "\n";
     }
     while (temp < 0)
     {
