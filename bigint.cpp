@@ -12,14 +12,15 @@ class BigInt
 {
     
 public:
-    unsigned char n[BIGINT_LENGTH]; // unsigned char : 2 bytes (0 to 255 possible)
+    unsigned char d[BIGINT_LENGTH]; // digits. unsigned char : 2 bytes (0 to 255 possible)
 
     BigInt();
-    BigInt(unsigned char m[BIGINT_LENGTH]){ memcpy(n,m, sizeof(n));}
+    BigInt(unsigned char m[BIGINT_LENGTH]){ memcpy(d,m, sizeof(d));}
     BigInt(string &);
 
-    //unsigned char * getn() const {   return n;}
-    void printBigInt(int) const;
+    //unsigned char * getn() const {   return d;}
+    void printBigInt(void) const;
+    void shift(int n); // décalage vers la gauche (*base^n)
 
     friend BigInt &operator+=(BigInt &, const BigInt &); // & to do not copy the object
     friend BigInt operator+(const BigInt &, const BigInt &);
@@ -33,7 +34,6 @@ public:
     friend BigInt mod_add(const BigInt &, const BigInt &, const BigInt &); // modular addtion
     friend BigInt mod_sub(const BigInt &, const BigInt &, const BigInt &); // modular substraction
 
-
 //private:
 };
 
@@ -41,7 +41,7 @@ public:
 BigInt::BigInt()
 {
     unsigned char m[BIGINT_LENGTH]={};
-    memcpy(n,m,sizeof(m));
+    memcpy(d,m,sizeof(m));
 }
 
 
@@ -50,65 +50,65 @@ BigInt::BigInt(string & s)
     int l = s.length();
     for (int i=0; i<BIGINT_LENGTH; i++)
     {
-        n[i]=0;
+        d[i]=0;
     }
     for (int i=BIGINT_LENGTH-l; i<BIGINT_LENGTH; i++)
     {
         switch (s[i-BIGINT_LENGTH+l])
         {
         case '0':
-            n[i] = 0;
+            d[i] = 0;
             break;
         case '1':
-            n[i] = 1;
+            d[i] = 1;
             break;
         case '2':
-            n[i] = 2;
+            d[i] = 2;
             break;
         case '3':
-            n[i] = 3;
+            d[i] = 3;
             break;
         case '4':
-            n[i] = 4;
+            d[i] = 4;
             break;
         case '5':
-            n[i] = 5;
+            d[i] = 5;
             break;
         case '6':
-            n[i] = 6;
+            d[i] = 6;
             break;
         case '7':
-            n[i] = 7;
+            d[i] = 7;
             break;
         case '8':
-            n[i] = 8;
+            d[i] = 8;
             break;
         case '9':
-            n[i] = 9;
+            d[i] = 9;
             break;
         case 'a':
         case 'A':
-            n[i] = 10;
+            d[i] = 10;
             break;
         case 'b':
         case 'B':
-            n[i] = 11;
+            d[i] = 11;
             break;
         case 'c':
         case 'C':
-            n[i] = 12;
+            d[i] = 12;
             break;
         case 'd':
         case 'D':
-            n[i] = 13;
+            d[i] = 13;
             break;
         case 'e':
         case 'E':
-            n[i] = 14;
+            d[i] = 14;
             break;
         case 'f':
         case 'F':
-            n[i] = 15;
+            d[i] = 15;
             break;
         default:
             cout << "Error in BigInt init\n";
@@ -117,21 +117,22 @@ BigInt::BigInt(string & s)
     }
 }
 
-void BigInt::printBigInt(int base=16) const
+void BigInt::printBigInt(void) const
 {
     int j = 0;
     bool flag = false;
     while(not(flag))
     {
-        if (n[j] == 0)
+        if (d[j] != 0)
+        {
             flag = true;
             j --; 
+        }
         j++;
     }
-
     for (int i = j; i< BIGINT_LENGTH; i++)
     {
-        switch (n[i])
+        switch (d[i])
         {
         case 0:
             cout<<'0';
@@ -193,12 +194,12 @@ BigInt &operator+=(BigInt &a,const BigInt& b)
     unsigned char carry = 0;
     for (int i = BIGINT_LENGTH-1; i>= 0; i--)
     {
-        a.n[i] += b.n[i]+carry;
+        a.d[i] += b.d[i]+carry;
         carry = 0;
-        if (a.n[i] >= DIGIT_MAX)
+        if (a.d[i] >= DIGIT_MAX)
         {
-            a.n[i] &= DIGIT_MAX - 1; // masque bit à bit plus opti que la soustraction
-            //a.n[i] -= DIGIT_MAX;
+            a.d[i] &= DIGIT_MAX - 1; // masque bit à bit plus opti que la soustraction
+            //a.d[i] -= DIGIT_MAX;
             carry = 1;
         }
     }
@@ -218,7 +219,7 @@ BigInt &operator-=(BigInt &a, BigInt const &b)
     /*unsigned char m[BIGINT_LENGTH];
     
     //memcpy(m, b.getn(), sizeof(m));
-    memcpy(m, b.n, sizeof(b.n));
+    memcpy(m, b.d, sizeof(b.d));
     for (int i=0; i< BIGINT_LENGTH; i++)
     {
         m[i] = ~m[i];
@@ -233,15 +234,15 @@ BigInt &operator-=(BigInt &a, BigInt const &b)
     unsigned char carry = 0;
     for (int i = BIGINT_LENGTH-1; i>= 0; i--)
     {
-        if (a.n[i] >= b.n[i]+carry)
+        if (a.d[i] >= b.d[i]+carry)
         {
-            a.n[i] -= b.n[i]+carry;
+            a.d[i] -= b.d[i]+carry;
             carry = 0;
         }
         else
         {
-            a.n[i] += DIGIT_MAX;
-            a.n[i] -= b.n[i]+carry;
+            a.d[i] += DIGIT_MAX;
+            a.d[i] -= b.d[i]+carry;
             carry = 1;
         }
     }
@@ -257,70 +258,83 @@ BigInt operator-(const BigInt &a, const BigInt &b)
 }
 
 
-BigInt &operator*=(BigInt &a, const BigInt &b)
+void BigInt::shift(int n)
 {
-    unsigned char carry = 0;
-    for (int i = BIGINT_LENGTH-1; i>= 0; i--)
+    unsigned char temp[BIGINT_LENGTH];
+    for (int i=0; i<BIGINT_LENGTH-n; i++)
     {
-        a.n[i] += b.n[i]+carry;
-        carry = 0;
-        if (a.n[i] > DIGIT_MAX)
-        {
-            a.n[i] -= DIGIT_MAX;
-            carry = 1;
-        }
+        temp[n+i] = d[i];
     }
-    return a;
-
-
-    /*
-    var partial = { sign: a.sign * b.sign, digits: [] }; // digits should be filled with zeros
-
-    // For each digit of b
-    for (var i = 0; i < b.digits.length; i++) {
-        var carry = 0;
-        var digit;
-
-        // For each digit of a
-        for (var j = i; j < a.digits.length + i; j++) {
-            // Multiply the digits, and add them to the current partial product, along with any carry
-            digit = partial.digits[j] + (b.digits[i] * a.digits[j - i]) + carry;
-            carry = Math.floor(digit / 10); // New carry
-            partial.digits[j] = digit % 10; // Put the result back into the partial product
-        }
-        // Don't forget the final carry (if necessary)!
-        if (carry) {
-            digit = partial.digits[j] + carry;
-            carry = Math.floor(digit / 10);
-            partial.digits[j] = digit % 10;
-        }
-    }
-
-    // That's it!
-    return partial;
-    */
+    memcpy(d,temp,sizeof(d));
 }
 
 
 BigInt operator*(const BigInt &a, const BigInt &b)
 {
-    BigInt temp;
-    temp = a;
-    temp *= b;
-    return temp;
+    BigInt product[BIGINT_LENGTH];
+    
+    for (int bi = BIGINT_LENGTH; bi > 0; bi--)
+    {
+        int carry = 0;
+        //unsigned char temp[BIGINT_LENGTH] = {};
+        BigInt temp;
+        for (int ai = BIGINT_LENGTH-1; ai > 0; ai--)
+        {
+            temp.d[ai] = b.d[bi]*a.d[ai] + carry;
+            carry = temp.d[ai]/DIGIT_MAX;
+            temp.d[ai] = temp.d[ai]%DIGIT_MAX;
+        }
+        temp.shift(BIGINT_LENGTH-bi);
+        product += temp;
+    }
+    
+    return product;
 }
+
+EN LITTLE ENDIAN:   
+multiply(a[1..p], b[1..q], base)                            // Operands containing rightmost digits at index 1
+  product = [1..p+q]                                        // Allocate space for result
+  for b_i = 1 to q                                          // for all digits in b
+    carry = 0
+    for a_i = 1 to p                                        // for all digits in a
+      product[a_i + b_i - 1] += carry + a[a_i] * b[b_i]
+      carry = product[a_i + b_i - 1] / base
+      product[a_i + b_i - 1] = product[a_i + b_i - 1] mod base
+    product[b_i + p] = carry                               // last digit comes from final carry
+  return product
+
+
+/*// For each digit of b
+for (var i = 0; i < b.digits.length; i++) {
+    // For each digit of a
+    for (var j = i; j < a.digits.length + i; j++) {
+        // Multiply the digits, and add them to the current partial product, along with any carry
+        digit = partial.digits[j] + (b.digits[i] * a.digits[j - i]) + carry;
+        carry = Math.floor(digit / 10); // New carry
+        partial.digits[j] = digit % 10; // Put the result back into the partial product
+    }
+    // Don't forget the final carry (if necessary)!
+    if (carry) {
+        digit = partial.digits[j] + carry;
+        carry = Math.floor(digit / 10);
+        partial.digits[j] = digit % 10;
+    }
+}
+
+// That's it!
+return partial;
+*/
 
 
 bool operator<(const BigInt &a, const BigInt &b)
 {
     for (int i = 0; i<BIGINT_LENGTH; i++)
     {
-        if (a.n[i] > b.n[i])
+        if (a.d[i] > b.d[i])
             return false;
-        else if (a.n[i] < b.n[i])
+        else if (a.d[i] < b.d[i])
             return true; 
     }
-
     return false; // a == b
 }
 
@@ -331,8 +345,6 @@ BigInt operator%(const BigInt &a, const BigInt &b)
     while (not(temp < b))
     {
         temp -= b;
-        //temp.printBigInt();
-        //cout << "\n";
     }
     while (temp < 0)
     {
@@ -350,8 +362,6 @@ BigInt mod_add(const BigInt &a, const BigInt &b, const BigInt &p)
     while (not(temp < p))
     {
         temp -= p;
-        //temp.printBigInt();
-        //cout << "\n";
     }
     return temp;
 }
@@ -380,14 +390,13 @@ int main()
 {
     string x = "0D9029AD2C7E5CF4340823B2A87DC68C9E4CE3174C1E6EFDEE12C07D";
     string y = "58AA56F772C0726F24C6B89E4ECDAC24354B9E99CAA3F6D3761402CD";
-    string z = "4444458";
+    string z = "04444458";
     string u = "d";
     string t = "0ffffffffffffffffffffffffffffffffffffffffffffffffffffeff";
     string v = "DEE12C07D";
 
     BigInt a(x);
     //a.printBigInt();
-    cout << "\n";
 
     BigInt b(y);
 
@@ -395,22 +404,24 @@ int main()
     BigInt d(v);
     BigInt e(z);
     //c = b-a;
-    c = a+b;
+    //c = a+b;
+    //c.printBigInt();
+    //c = mod_add(d,d,e);
+    //c.printBigInt();
+    c = d*e;
+    d.printBigInt();
+    e.printBigInt();
     c.printBigInt();
-    c = mod_add(d,d,e);
-    c.printBigInt();
-
 
 
     //faire le add avec les overflow : convertir les types ne coute rien
     // soustraction utilisant -b = b barre +1 :~b= b barre
     // coder operateur modulo
 
-    unsigned char h = 255;
+    /*unsigned char h = 255;
     unsigned char j = 2;
     unsigned char k = 255+2;
-
-    cout << (int) h << "\t"<< (int) j << "\t"<< (int) k;
+    cout << (int) h << "\t"<< (int) j << "\t"<< (int) k;*/
     
     return 0;
 }
