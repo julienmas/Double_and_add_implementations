@@ -130,6 +130,7 @@ void BigInt::printBigInt(void) const
         }
         j++;
     }
+    //cout << "0";
     for (int i = j; i< BIGINT_LENGTH; i++)
     {
         switch (d[i])
@@ -260,10 +261,10 @@ BigInt operator-(const BigInt &a, const BigInt &b)
 
 void BigInt::shift(int n)
 {
-    unsigned char temp[BIGINT_LENGTH];
-    for (int i=0; i<BIGINT_LENGTH-n; i++)
+    unsigned char temp[BIGINT_LENGTH] = {};
+    for (int i=BIGINT_LENGTH-1; i>=n; i--)
     {
-        temp[n+i] = d[i];
+        temp[i-n] = d[i];
     }
     memcpy(d,temp,sizeof(d));
 }
@@ -271,59 +272,25 @@ void BigInt::shift(int n)
 
 BigInt operator*(const BigInt &a, const BigInt &b)
 {
-    BigInt product[BIGINT_LENGTH];
+    BigInt product;
     
-    for (int bi = BIGINT_LENGTH; bi > 0; bi--)
+    for (int bi = BIGINT_LENGTH-1; bi >= 0; bi--)
     {
         int carry = 0;
-        //unsigned char temp[BIGINT_LENGTH] = {};
         BigInt temp;
-        for (int ai = BIGINT_LENGTH-1; ai > 0; ai--)
+        for (int ai = BIGINT_LENGTH-1; ai >= 0; ai--)
         {
             temp.d[ai] = b.d[bi]*a.d[ai] + carry;
             carry = temp.d[ai]/DIGIT_MAX;
             temp.d[ai] = temp.d[ai]%DIGIT_MAX;
         }
-        temp.shift(BIGINT_LENGTH-bi);
+        temp.shift(BIGINT_LENGTH-bi-1);
+        //temp.printBigInt();
         product += temp;
     }
     
     return product;
 }
-
-EN LITTLE ENDIAN:   
-multiply(a[1..p], b[1..q], base)                            // Operands containing rightmost digits at index 1
-  product = [1..p+q]                                        // Allocate space for result
-  for b_i = 1 to q                                          // for all digits in b
-    carry = 0
-    for a_i = 1 to p                                        // for all digits in a
-      product[a_i + b_i - 1] += carry + a[a_i] * b[b_i]
-      carry = product[a_i + b_i - 1] / base
-      product[a_i + b_i - 1] = product[a_i + b_i - 1] mod base
-    product[b_i + p] = carry                               // last digit comes from final carry
-  return product
-
-
-/*// For each digit of b
-for (var i = 0; i < b.digits.length; i++) {
-    // For each digit of a
-    for (var j = i; j < a.digits.length + i; j++) {
-        // Multiply the digits, and add them to the current partial product, along with any carry
-        digit = partial.digits[j] + (b.digits[i] * a.digits[j - i]) + carry;
-        carry = Math.floor(digit / 10); // New carry
-        partial.digits[j] = digit % 10; // Put the result back into the partial product
-    }
-    // Don't forget the final carry (if necessary)!
-    if (carry) {
-        digit = partial.digits[j] + carry;
-        carry = Math.floor(digit / 10);
-        partial.digits[j] = digit % 10;
-    }
-}
-
-// That's it!
-return partial;
-*/
 
 
 bool operator<(const BigInt &a, const BigInt &b)
@@ -408,10 +375,10 @@ int main()
     //c.printBigInt();
     //c = mod_add(d,d,e);
     //c.printBigInt();
-    c = d*e;
-    d.printBigInt();
-    e.printBigInt();
-    c.printBigInt();
+    c = a*b;
+    a.printBigInt();
+    b.printBigInt();
+    c.printBigInt(); //3B6F4003E6C75EF8
 
 
     //faire le add avec les overflow : convertir les types ne coute rien
